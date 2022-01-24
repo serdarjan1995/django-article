@@ -18,6 +18,7 @@ from django.urls import path
 
 from django_article.articles.views import ArticleView, ArticlesListView
 from django_article.regions.views import RegionView, RegionsListView
+from django_article.authors.views import AuthorView, AuthorsListView
 
 urlpatterns = [
     path("admin", admin.site.urls),
@@ -25,4 +26,6 @@ urlpatterns = [
     path("articles/<int:article_id>", ArticleView.as_view(), name="article"),
     path("regions", RegionsListView.as_view(), name="regions-list"),
     path("regions/<int:region_id>", RegionView.as_view(), name="region"),
+    path("authors", AuthorsListView.as_view(), name="authors-list"),
+    path("authors/<int:author_id>", AuthorView.as_view(), name="author"),
 ]
