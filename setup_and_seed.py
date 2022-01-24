@@ -33,4 +33,5 @@ Article.objects.create(title="Fake Article", content="Fake Content").regions.set
 Author.objects.create(first_name="Russell", last_name="Wormald")
 Author.objects.create(first_name="Livia", last_name="Hobbs")
 Author.objects.create(first_name="Luca", last_name="Amos")
-Author.objects.create(first_name="Diego", last_name="Tanner")
+author = Author.objects.create(first_name="Diego", last_name="Tanner")
+Article.objects.create(title="Test Article", content="Test Content", author=author)
