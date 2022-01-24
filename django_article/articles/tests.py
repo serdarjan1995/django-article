@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from django_article.articles.models import Article
+from django_article.authors.models import Author
 from django_article.regions.models import Region
 
 
@@ -17,6 +18,9 @@ class ArticleListViewTestCase(TestCase):
             title="Fake Article 2", content="Lorem Ipsum"
         )
         self.article_2.regions.set([self.region_1, self.region_2])
+        self.author = Author.objects.create(first_name="Henry", last_name="Benington")
+        self.article_3 = Article.objects.create(title="Test Article with Author", author=self.author)
+        self.article_3.regions.set([self.region_2])
 
     def test_serializes_with_correct_data_shape_and_status_code(self):
         response = self.client.get(self.url)
@@ -28,18 +32,37 @@ class ArticleListViewTestCase(TestCase):
                     "id": self.article_1.id,
                     "title": "Fake Article 1",
                     "content": "",
+                    "author": {},
                     "regions": [],
                 },
                 {
                     "id": self.article_2.id,
                     "title": "Fake Article 2",
                     "content": "Lorem Ipsum",
+                    "author": {},
                     "regions": [
                         {
                             "id": self.region_1.id,
                             "code": "AL",
                             "name": "Albania",
                         },
+                        {
+                            "id": self.region_2.id,
+                            "code": "UK",
+                            "name": "United Kingdom",
+                        },
+                    ],
+                },
+                {
+                    "id": self.article_3.id,
+                    "title": "Test Article with Author",
+                    "content": "",
+                    "author": {
+                        "id": self.author.id,
+                        "first_name": "Henry",
+                        "last_name": "Benington",
+                    },
+                    "regions": [
                         {
                             "id": self.region_2.id,
                             "code": "UK",
@@ -54,6 +77,7 @@ class ArticleListViewTestCase(TestCase):
         payload = {
             "title": "Fake Article 3",
             "content": "To be or not to be",
+            "author": None,
             "regions": [
                 {"code": "US", "name": "United States of America"},
                 {"code": "AU", "name": "Austria"},
@@ -72,6 +96,7 @@ class ArticleListViewTestCase(TestCase):
                 "id": article.id,
                 "title": "Fake Article 3",
                 "content": "To be or not to be",
+                "author": {},
                 "regions": [
                     {
                         "id": regions.all()[0].id,
@@ -84,10 +109,45 @@ class ArticleListViewTestCase(TestCase):
             response.json(),
         )
 
+    def test_creates_new_article_with_author(self):
+        payload = {
+            "title": "Fake Article 4",
+            "content": "To be or not to be",
+            "author": {
+                "id": self.author.id
+            },
+            "regions": [],
+        }
+        response = self.client.post(
+            self.url, data=json.dumps(payload), content_type="application/json"
+        )
+        article = Article.objects.last()
+        regions = Region.objects.filter(articles__id=article.id)
+        author = article.author
+        self.assertEqual(response.status_code, 201)
+        self.assertIsNotNone(article)
+        self.assertIsNotNone(author)
+        self.assertEqual(regions.count(), 0)
+        self.assertDictEqual(
+            {
+                "id": article.id,
+                "title": "Fake Article 4",
+                "content": "To be or not to be",
+                "author": {
+                    "id": self.author.id,
+                    "first_name": self.author.first_name,
+                    "last_name": self.author.last_name
+                },
+                "regions": [],
+            },
+            response.json(),
+        )
+
 
 class ArticleViewTestCase(TestCase):
     def setUp(self):
-        self.article = Article.objects.create(title="Fake Article 1")
+        self.author = Author.objects.create(first_name="Henry", last_name="Benington")
+        self.article = Article.objects.create(title="Fake Article 1", author=self.author)
         self.region_1 = Region.objects.create(code="AL", name="Albania")
         self.region_2 = Region.objects.create(code="UK", name="United Kingdom")
         self.article.regions.set([self.region_1, self.region_2])
@@ -102,6 +162,11 @@ class ArticleViewTestCase(TestCase):
                 "id": self.article.id,
                 "title": "Fake Article 1",
                 "content": "",
+                "author": {
+                    "id": self.author.id,
+                    "first_name": self.author.first_name,
+                    "last_name": self.author.last_name
+                },
                 "regions": [
                     {
                         "id": self.region_1.id,
@@ -119,9 +184,15 @@ class ArticleViewTestCase(TestCase):
 
     def test_updates_article_and_regions(self):
         # Change regions
+        new_author = Author.objects.create(first_name="Charles", last_name="Monroe")
         payload = {
             "title": "Fake Article 1 (Modified)",
             "content": "To be or not to be here",
+            "author": {
+                "id": new_author.id,
+                "first_name": new_author.first_name,
+                "last_name": new_author.last_name
+            },
             "regions": [
                 {"code": "US", "name": "United States of America"},
                 {"id": self.region_2.id},
@@ -141,6 +212,11 @@ class ArticleViewTestCase(TestCase):
                 "id": article.id,
                 "title": "Fake Article 1 (Modified)",
                 "content": "To be or not to be here",
+                "author": {
+                    "id": new_author.id,
+                    "first_name": new_author.first_name,
+                    "last_name": new_author.last_name
+                },
                 "regions": [
                     {
                         "id": self.region_2.id,
@@ -170,6 +246,32 @@ class ArticleViewTestCase(TestCase):
             {
                 "id": article.id,
                 "title": "Fake Article 1 (Modified)",
+                "author": {
+                    "id": new_author.id,
+                    "first_name": new_author.first_name,
+                    "last_name": new_author.last_name
+                },
+                "content": "To be or not to be here",
+                "regions": [],
+            },
+            response.json(),
+        )
+
+        # Remove author
+        payload["author"] = None
+        response = self.client.put(
+            self.url, data=json.dumps(payload), content_type="application/json"
+        )
+        article = Article.objects.last()
+        author = article.author
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(article)
+        self.assertIsNone(author)
+        self.assertDictEqual(
+            {
+                "id": article.id,
+                "title": "Fake Article 1 (Modified)",
+                "author": {},
                 "content": "To be or not to be here",
                 "regions": [],
             },
