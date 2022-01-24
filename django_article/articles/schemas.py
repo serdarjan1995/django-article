@@ -6,6 +6,7 @@ from marshmallow.decorators import post_load
 from django_article.articles.models import Article
 from django_article.regions.models import Region
 from django_article.regions.schemas import RegionSchema
+from django_article.utils import must_not_be_blank
 
 
 class ArticleSchema(Schema):
@@ -13,7 +14,7 @@ class ArticleSchema(Schema):
         model = Article
 
     id = fields.Integer()
-    title = fields.String(validate=validate.Length(max=255))
+    title = fields.String(validate=[validate.Length(max=255), must_not_be_blank], required=True, allow_blank=False)
     content = fields.String()
     regions = fields.Method(
         required=False, serialize="get_regions", deserialize="load_regions"

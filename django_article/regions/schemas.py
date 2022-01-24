@@ -4,6 +4,7 @@ from marshmallow import Schema
 from marshmallow.decorators import post_load
 
 from django_article.regions.models import Region
+from django_article.utils import must_not_be_blank
 
 
 class RegionSchema(Schema):
@@ -12,7 +13,7 @@ class RegionSchema(Schema):
 
     id = fields.Integer()
     code = fields.String(required=True, validate=validate.Length(equal=2))
-    name = fields.String(validate=validate.Length(max=255))
+    name = fields.String(required=True, validate=[validate.Length(max=255), must_not_be_blank])
 
     @post_load
     def update_or_create(self, data, *args, **kwargs):

@@ -20,9 +20,9 @@ from django_article.articles.views import ArticleView, ArticlesListView
 from django_article.regions.views import RegionView, RegionsListView
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("articles/", ArticlesListView.as_view(), name="articles-list"),
-    path("articles/<int:article_id>/", ArticleView.as_view(), name="article"),
-    path("regions/", RegionsListView.as_view(), name="regions-list"),
-    path("regions/<int:region_id>/", RegionView.as_view(), name="region"),
+    path("admin", admin.site.urls),
+    path("articles", ArticlesListView.as_view(), name="articles-list"),
+    path("articles/<int:article_id>", ArticleView.as_view(), name="article"),
+    path("regions", RegionsListView.as_view(), name="regions-list"),
+    path("regions/<int:region_id>", RegionView.as_view(), name="region"),
 ]
