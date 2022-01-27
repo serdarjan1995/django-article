@@ -278,6 +278,16 @@ class ArticleViewTestCase(TestCase):
             response.json(),
         )
 
+    def test_get_all_articles_of_author(self):
+        article1 = Article.objects.create(title="Sample Article 1", author=self.author)
+        article2 = Article.objects.create(title="Sample Article 2", author=self.author)
+        article3 = Article.objects.create(title="Sample Article 3", author=self.author)
+        article4 = Article.objects.create(title="Sample Article 4", author=self.author)
+        article5 = Article.objects.create(title="Sample Article 5", author=self.author)
+
+        all_articles = self.author.articles.all()
+        self.assertCountEqual(all_articles, [self.article, article1, article2, article3, article4, article5])
+
     def test_removes_article(self):
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, 200)
