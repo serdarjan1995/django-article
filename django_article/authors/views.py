@@ -14,7 +14,9 @@ class AuthorsListView(View):
 
     def post(self, request, *args, **kwargs):
         try:
-            author = AuthorSchema().load(json.loads(request.body))
+            json_body = json.loads(request.body)
+            json_body.pop('id', '')
+            author = AuthorSchema().load(json_body)
         except ValidationError as e:
             return json_response(e.messages, 400)
         return json_response(AuthorSchema().dump(author), 201)
