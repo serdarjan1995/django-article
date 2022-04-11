@@ -1,8 +1,6 @@
 import json
-
 from marshmallow import ValidationError
 from django.views.generic import View
-
 from django_article.articles.models import Article
 from django_article.articles.schemas import ArticleSchema
 from django_article.utils import json_response
@@ -13,12 +11,15 @@ class ArticlesListView(View):
         region_code_qr = request.GET.get('region_code', None)
         if region_code_qr:
             region_codes = region_code_qr.split(',')
-            author_qs = Article.objects.filter()
-            for r_code in region_codes:
-                author_qs = author_qs.filter(regions__code=r_code)
+
+            # article_qs.filter(regions__in=region_codes)  # only one filter
+
+            article_qs = Article.objects.filter()
+            for r_code in region_codes:  # multiple regions filter
+                article_qs = article_qs.filter(regions__code=r_code)
         else:
-            author_qs = Article.objects.all()
-        return json_response(ArticleSchema().dump(author_qs, many=True))
+            article_qs = Article.objects.all()
+        return json_response(ArticleSchema().dump(article_qs, many=True))
 
     def post(self, request, *args, **kwargs):
         try:
